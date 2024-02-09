@@ -1,6 +1,7 @@
 package com.flipkart.es.serviceimpl;
 
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Random;
 
 import org.springframework.http.HttpStatus;
@@ -11,12 +12,16 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.flipkart.es.cache.CacheStore;
 import com.flipkart.es.entity.Customer;
 import com.flipkart.es.entity.Seller;
 import com.flipkart.es.entity.User;
 import com.flipkart.es.enums.UserRole;
+import com.flipkart.es.exception.InvalidOTPException;
 import com.flipkart.es.exception.InvalidUserRoleException;
-import com.flipkart.es.exception.UserVerifiedException;
+import com.flipkart.es.exception.OTPExpiredException;
+import com.flipkart.es.exception.RegistrationSessionExpiredException;
+import com.flipkart.es.exception.UserRegisteredException;
 import com.flipkart.es.repository.CustomerRepository;
 import com.flipkart.es.repository.SellerRepository;
 import com.flipkart.es.repository.UserRepository;
@@ -30,10 +35,6 @@ import com.flipkart.es.util.ResponseStructure;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-
-import com.flipkart.es.cache.*;
-import com.flipkart.es.exception.*;
-
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,14 +50,10 @@ public class AuthServiceImpl implements AuthService {
 	private CacheStore<String> otpCacheStore;
 	private CacheStore<User> userCacheStore;
 	private JavaMailSender javaMailSender;
-	
-	
-	
-
-
-	
 
 	public User saveUser(User user) {
+
+		user.setEmailVerified(true);
 
 		if (user.getUserRole().equals(UserRole.SELLER)) {
 			Seller seller = (Seller) user;
@@ -67,142 +64,6 @@ public class AuthServiceImpl implements AuthService {
 		}
 	}
 
-	@Override
-	public ResponseEntity<ResponseStructure<UserResponse>> registerUser(UserRequest userRequest) {
-
-		
-
-		// if (!UserRole.CUSTOMER.name().equals(userRequest.getUserRole().toUpperCase())) {
-		// 	throw new InvalidUserRoleException("invalid user role");
-		// }
-		// if (!UserRole.SELLER.name().equals(userRequest.getUserRole().toUpperCase())) {
-		// 	throw new InvalidUserRoleException("invalid user role");
-		// }
-		
-		if (userRepository.existsByUserEmailAndIsEmailVerified(userRequest.getUserEmail(), true))
-			throw new UserVerifiedException("user already registered and verified");
-		
-		
-		String  OTP=generateOTP();
-		User user=mapToRespectiveType(userRequest);
-		userCacheStore.add(userRequest.getUserEmail(), user);
-		otpCacheStore.add(userRequest.getUserEmail(),OTP);
-		
-		try
-		{
-			sendOtpToMail(user, OTP);
-		}catch(MessagingException e)
-		{
-			log.error("The email address does not exsist");
-		}
-		
-		
-//		return new ResponseEntity<ResponseStructure<UserResponse>>(structure.setStatus(HttpStatus.ACCEPTED),
-//				"Please verify through OTP",
-//				mapToUserResponse(user));
-		
-
-//		User user = mapToRespectiveType(userRequest);
-//
-//		if (userRepository.existsByUserEmail(userRequest.getUserEmail())) {
-//			// send otp and verify otp
-//			// setEmailVerified as true and save it.
-//		} else {
-//			user = saveUser(user);
-//		}
-		return ResponseEntityProxy.setResponseStructure(HttpStatus.ACCEPTED,
-				"Please verify through OTP sent on email ID",
-				mapToUserResponse(user));
-	}
-
-	@Override
-	public ResponseEntity<ResponseStructure<UserResponse>> verifyOTP(OtpModel otpModel) 
-	{
-		User user=userCacheStore.get(otpModel.getEmail());
-		String otp=otpCacheStore.get(otpModel.getEmail());
-		
-		if(otp==null) throw new OtpExpiredException("OTP expired");
-		if(user==null) throw new RegistrationSessionExpiredException("Registration session expired");
-		if(!otp.equals(otpModel.getOtp())) throw new InvalidOtpException("Invalid OTP");
-		
-		user.setEmailVerified(true);
-		userRepository.save(user);
-		try
-		{
-			sendRegistrationSucessMail(user);
-		}catch(MessagingException e)
-		{
-			log.error("The email address does not exsist");
-		}
-		
-		
-		 		return ResponseEntityProxy.setResponseStructure(HttpStatus.ACCEPTED,
-				"user successfully Registered",
-				mapToUserResponse(user));
-
-		
-	
-		
-	}
-	
-	private void sendOtpToMail(User user,String otp) throws MessagingException
-	{
-		
-		sendMail(		MessageStructure.builder()
-				.to(user.getUserEmail())
-				.subject("Complete your Registration to Flipkart")
-				.sentDate(new Date())
-				.text("hey ,"+user.getUsername()
-						+"Good to see you interested in flipkart,"
-						+"Complete your registration using the OTP<br>"
-						+"<h1>"+otp+"</h1><br>"
-						+"Note:The OTP expires in 1 minute"
-						+"<br><br>"
-						+"with best regards<br>"
-						+"Flipkart"
-						).build());
-
-		
-	}
-	
-	private void sendRegistrationSucessMail(User user) throws MessagingException
-	{
-		
-		sendMail(		MessageStructure.builder()
-				.to(user.getUserEmail())
-				.subject("Registration Successful,Welcome to Flipkart")
-				.sentDate(new Date())
-				.text("hey ,"+user.getUsername()
-						+"Registration Successful,Welcome to Flipkart,"
-						
-						
-						
-						+"<br><br>"
-						+"with best regards<br>"
-						+"Flipkart"
-						).build());
-
-		
-	}
-	
-	@Async
-	private void sendMail(MessageStructure message) throws MessagingException
-	{
-		MimeMessage mimeMessage=javaMailSender.createMimeMessage();
-		MimeMessageHelper helper=new MimeMessageHelper(mimeMessage, true);
-		helper.setTo(message.getTo());
-		helper.setSubject(message.getSubject());
-		helper.setSentDate(message.getSentDate());
-		helper.setText(message.getText(),true);
-		javaMailSender.send(mimeMessage);
-	}
-	
-
-	private String generateOTP() {
-		
-		return String.valueOf(new Random().nextInt(100000,999999));
-	}
-	
 	@SuppressWarnings("unchecked")
 	private <T extends User> T mapToRespectiveType(UserRequest userRequest) {
 
@@ -238,8 +99,116 @@ public class AuthServiceImpl implements AuthService {
 				.isDeleted(user.isDeleted())
 				.isEmailVerified(user.isEmailVerified())
 				.build();
+	}
+
+	private String generateOTP() {
+		return String.valueOf(new Random().nextInt(111111, 999999));
+	}
+	
+	private void sendOtpToMail(User user, String otp) throws MessagingException {
+		sendMail(MessageStructure.builder()
+		.to(user.getUserEmail())
+		.subject("complete your registration to flipkart electronics")
+		.sentDate(new Date())
+		.text(
+				"Hey " + user.getUsername()
+				+ " Welcome to flipkart electronics, <br>"
+				+ "Complete your registration using the OTP <br>"
+				+ "<h1><strong> "+otp+" </strong></h1> <br>"
+						+ "<br><br>"
+						+ "Do not share this OTP with anyone"
+						+ "<br><br>"
+						+ "with best regards"
+						+ "FlipKart electronics"
+						)
+		.build());
+	}
+
+	public void sendWelcomeMessage(User user) throws MessagingException{
+		sendMail(MessageStructure.builder()
+		.to(user.getUserEmail())
+		.subject("Welcome to flipkart electronics")
+		.sentDate(new Date())
+		.text(
+			"Hello " + user.getUsername()
+			+ " we welcome you to flipkart electronics <br>"
+			+ " we at flipkart do not call our customers for the password or band related issues <br><br>"
+			+ " Beware of fraudsters"
+			+ " Have a nice shopping"
+			+ " with best regards"
+			+ " Flipkart electronics"
+		).build());
+		
+		
+	}
+
+	@Async
+	private void sendMail(MessageStructure messageStructure) throws MessagingException {
+		MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+		MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false);
+		helper.setTo(messageStructure.getTo());
+		helper.setSubject(messageStructure.getSubject());
+		helper.setSentDate(messageStructure.getSentDate());
+		helper.setText(messageStructure.getText(), true);
+		javaMailSender.send(mimeMessage);
+	}
+	
+	@Override
+	public ResponseEntity<ResponseStructure<UserResponse>> registerUser(UserRequest userRequest) {
+
+		try {
+			if (!EnumSet.allOf(UserRole.class).contains(UserRole.valueOf(userRequest.getUserRole().toUpperCase()))) {
+				throw new InvalidUserRoleException("user role invalid");
+			}
+		} catch (Exception e) {
+			throw new InvalidUserRoleException("user role invalid");
+		}
+
+		if (userRepository.existsByUserEmail(userRequest.getUserEmail())) {
+			throw new UserRegisteredException("user already registered");
+		}
+		User user = mapToRespectiveType(userRequest);
+
+		String otp = generateOTP();
+		userCacheStore.add(userRequest.getUserEmail(), user);
+		otpCacheStore.add(userRequest.getUserEmail(), otp);
+
+		try {
+			sendOtpToMail(user, otp);
+		} catch (MessagingException e) {
+			log.error("the email address dosen't exist");
+		}
+
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.ACCEPTED,
+				"Please verify the otp sent to the email " + otp,
+				mapToUserResponse(user));
+	}
+
+	@Override
+	public ResponseEntity<ResponseStructure<UserResponse>> verifyOtp(OtpModel otpModel) {
+
+		String otpFromCache = otpCacheStore.get(otpModel.getUserEmail());
+		User user = userCacheStore.get(otpModel.getUserEmail());
+
+		if (otpFromCache == null)
+			throw new OTPExpiredException("otp expired");
+
+		if (user == null)
+			throw new RegistrationSessionExpiredException("registration session expired");
+
+		if (!otpFromCache.equals(otpModel.getUserOTP()))
+			throw new InvalidOTPException("invalid otp exception");
+
+		user = saveUser(user);
+		try {
+			sendWelcomeMessage(user);
+		} catch (MessagingException e) {
+			log.error("something went wrong in send welcome message");
+		}
+
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.CREATED,
+				"user registered successfully", mapToUserResponse(user));
 
 	}
-	 
 
 }

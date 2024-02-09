@@ -11,6 +11,6 @@ public interface AuthService {
 
 	ResponseEntity<ResponseStructure<UserResponse>> registerUser(UserRequest userRequest);
 
-	ResponseEntity<ResponseStructure<UserResponse>> verifyOTP(OtpModel otpModel);
+	ResponseEntity<ResponseStructure<UserResponse>> verifyOtp(OtpModel otpModel);
 
 }

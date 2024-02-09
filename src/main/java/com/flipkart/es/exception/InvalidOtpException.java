@@ -5,7 +5,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class InvalidOtpException extends RuntimeException {
-
-	private String message;
+public class InvalidOTPException extends RuntimeException{
+    private String message;
 }

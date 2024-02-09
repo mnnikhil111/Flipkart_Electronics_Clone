@@ -28,8 +28,8 @@ public class AuthController {
 	}
 	
 	@PostMapping("/verify-otp")
-	public ResponseEntity<ResponseStructure<UserResponse>> verifyOTP(@RequestBody OtpModel otpModel)
-	{
-		return authService.verifyOTP(otpModel);
+	public ResponseEntity<ResponseStructure<UserResponse>> verifyOtp(@RequestBody OtpModel otpModel){
+		return authService.verifyOtp(otpModel);
 	}
+	
 }

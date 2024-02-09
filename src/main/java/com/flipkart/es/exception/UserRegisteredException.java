@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class UserVerifiedException extends RuntimeException{
+public class UserRegisteredException extends RuntimeException{
     private String message;
 }

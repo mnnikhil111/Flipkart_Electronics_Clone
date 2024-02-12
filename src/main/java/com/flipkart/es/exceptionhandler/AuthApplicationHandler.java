@@ -11,6 +11,7 @@ import com.flipkart.es.exception.InvalidOTPException;
 import com.flipkart.es.exception.InvalidUserRoleException;
 import com.flipkart.es.exception.OTPExpiredException;
 import com.flipkart.es.exception.RegistrationSessionExpiredException;
+import com.flipkart.es.exception.UserNotLoggedInException;
 import com.flipkart.es.exception.UserRegisteredException;
 
 @RestControllerAdvice
@@ -44,5 +45,12 @@ public class AuthApplicationHandler {
     public ResponseEntity<Object> handleInvalidOTPException(InvalidOTPException exception){
         return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "registration session expired");
     }
+    
+    @ExceptionHandler(UserNotLoggedInException.class)
+    public ResponseEntity<Object> handleUserNotLoggedInException(UserNotLoggedInException exception){
+        return structure(HttpStatus.BAD_REQUEST, exception.getMessage(), "user not logged in");
+    }
+    
+    
     
 }

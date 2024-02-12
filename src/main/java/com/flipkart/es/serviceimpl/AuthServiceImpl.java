@@ -29,6 +29,7 @@ import com.flipkart.es.exception.InvalidOTPException;
 import com.flipkart.es.exception.InvalidUserRoleException;
 import com.flipkart.es.exception.OTPExpiredException;
 import com.flipkart.es.exception.RegistrationSessionExpiredException;
+import com.flipkart.es.exception.UserNotLoggedInException;
 import com.flipkart.es.exception.UserRegisteredException;
 import com.flipkart.es.repository.AccessTokenRepo;
 import com.flipkart.es.repository.CustomerRepository;
@@ -50,11 +51,13 @@ import com.flipkart.es.util.ResponseStructure;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.flipkart.es.responsedto.*;
 import com.flipkart.es.requestdto.*;
+import com.flipkart.es.util.*;
 
 @Slf4j
 @Service
@@ -318,6 +321,98 @@ public class AuthServiceImpl implements AuthService {
 				.build());
 
 
+	}
+
+//	@Override
+//	public ResponseEntity<ResponseStructure<AuthResponse>> logout(HttpServletRequest request,
+//			HttpServletResponse response) 
+//	{
+//		String rt="";
+//		String at="";
+//		
+//		
+//		Cookie[] cookies=request.getCookies();
+//		for(Cookie cookie:cookies)
+//		{
+//			if(cookie.getName().equals("rt"))
+//			{
+//				rt=cookie.getValue();
+//				
+//			}
+//			if(cookie.getName().equals("at"))
+//			{
+//				at=cookie.getValue();
+//			}
+//		}
+//		accessTokenRepo.findByToken(at).ifPresent(accessToken -> {
+//			accessToken.setBlocked(true);
+//			accessTokenRepo.save(accessToken);
+//			
+//		});
+//		refreshTokenRepo.findByToken(rt).ifPresent(refreshToken -> {
+//			refreshToken.setBlocked(true);
+//			refreshTokenRepo.save(refreshToken);
+//			
+//		});
+//		
+//		response.addCookie(CookieManager.invalidate(new Cookie("at"," ")));
+//		response.addCookie(CookieManager.invalidate(new Cookie("rt"," ")));
+//		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK, "User logged out successfully", null);
+//		
+//	}
+
+//	@Override
+//	public ResponseEntity<ResponseStructure<String>> logout(String refreshToken, String accessToken,
+//			HttpServletResponse response) {
+//		
+//		
+//		if(accessToken==null && refreshToken==null) throw new UserNotLoggedInException("User not logged in");
+//		
+//		accessTokenRepo.findByToken(accessToken).ifPresent(at -> {
+//			at.setBlocked(true);
+//			accessTokenRepo.save(at);
+//			
+//		});
+//		refreshTokenRepo.findByToken(refreshToken).ifPresent(rt -> {
+//			rt.setBlocked(true);
+//			refreshTokenRepo.save(rt);
+//			
+//		});
+//		
+//		response.addCookie(CookieManager.invalidate(new Cookie("at"," ")));
+//		response.addCookie(CookieManager.invalidate(new Cookie("rt"," ")));
+//		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK, "User logged out successfully"," User logged out successfully");
+//	}
+	
+	
+
+	@Override
+	public ResponseEntity<ResponseStructure<String>> logout(String accessToken,String refreshToken, HttpServletResponse response) 
+	{
+
+		if(accessToken==null&&refreshToken==null)throw new  UserNotLoggedInException("user not logged in");
+
+
+		accessTokenRepo.findByToken(accessToken)
+		.ifPresent(at -> {
+			at.setBlocked(true);
+			accessTokenRepo.save(at);
+		});
+		System.out.println(accessToken+"at");
+		System.out.println(refreshToken+"rt");
+
+		refreshTokenRepo.findByToken(refreshToken)
+		.ifPresent(rt -> {
+			rt.setBlocked(true);
+			refreshTokenRepo.save(rt);
+		});
+
+		response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
+		response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
+
+
+
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"logout successfully done", "logout successfully done");
 	}
 
 }

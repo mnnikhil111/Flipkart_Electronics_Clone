@@ -44,9 +44,5 @@ public class User {
     private boolean isEmailVerified;
     private boolean isDeleted;
     
-    @OneToMany(mappedBy = "user")
-    private List<AccessToken>accessToken;
-    
-    @OneToMany(mappedBy = "user")
-    private List<AccessToken>refreshToken;
+
 }

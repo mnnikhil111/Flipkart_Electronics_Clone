@@ -7,12 +7,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.flipkart.es.requestdto.AuthRequest;
 import com.flipkart.es.requestdto.OtpModel;
 import com.flipkart.es.requestdto.UserRequest;
+import com.flipkart.es.responsedto.AuthResponse;
 import com.flipkart.es.responsedto.UserResponse;
 import com.flipkart.es.service.AuthService;
 import com.flipkart.es.util.ResponseStructure;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -30,6 +33,13 @@ public class AuthController {
 	@PostMapping("/verify-otp")
 	public ResponseEntity<ResponseStructure<UserResponse>> verifyOtp(@RequestBody OtpModel otpModel){
 		return authService.verifyOtp(otpModel);
+	}
+	
+	@PostMapping("/login")
+	public ResponseEntity<ResponseStructure<AuthResponse>> login(@RequestBody AuthRequest authRequest,HttpServletResponse response)
+	{
+		return authService.login(authRequest,response);
+		
 	}
 	
 }

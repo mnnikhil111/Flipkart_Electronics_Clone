@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.flipkart.es.entity.User;
+import com.flipkart.es.repository.AccessTokenRepo;
 import com.flipkart.es.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
@@ -15,6 +16,8 @@ import lombok.AllArgsConstructor;
 public class ScheduledJobs {
 
     private UserRepository userRepository;
+    
+   
 
     @SuppressWarnings("null")
     @Scheduled(cron = "0 0 0 * * MON-SUN")

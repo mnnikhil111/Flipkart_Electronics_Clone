@@ -24,7 +24,7 @@ public class CookieManager {
 		
 	}
 	
-	public Cookie invalidate(Cookie cookie)
+	public static Cookie invalidate(Cookie cookie)
 	{
 		cookie.setPath("/");
 		cookie.setMaxAge(0);

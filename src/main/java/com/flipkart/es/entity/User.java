@@ -1,7 +1,5 @@
 package com.flipkart.es.entity;
 
-import java.util.List;
-
 import com.flipkart.es.enums.UserRole;
 
 import jakarta.persistence.Entity;
@@ -12,7 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,5 +41,5 @@ public class User {
     private boolean isEmailVerified;
     private boolean isDeleted;
     
-
+    
 }

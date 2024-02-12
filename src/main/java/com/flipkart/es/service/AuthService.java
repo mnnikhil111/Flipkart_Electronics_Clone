@@ -9,7 +9,6 @@ import com.flipkart.es.responsedto.AuthResponse;
 import com.flipkart.es.responsedto.UserResponse;
 import com.flipkart.es.util.ResponseStructure;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
@@ -18,8 +17,9 @@ public interface AuthService {
 
 	ResponseEntity<ResponseStructure<UserResponse>> verifyOtp(OtpModel otpModel);
 
-	ResponseEntity<ResponseStructure<AuthResponse>> login(AuthRequest authRequest, HttpServletResponse response);
+	ResponseEntity<ResponseStructure<AuthResponse>> login(AuthRequest authRequest,
+			HttpServletResponse httpServletResponse);
 
-	ResponseEntity<ResponseStructure<String>> logout(String refreshToken,String accessToken, HttpServletResponse response);
+	ResponseEntity<ResponseStructure<String>> logout(String accessToken, String refreshToken, HttpServletResponse response);
 
 }

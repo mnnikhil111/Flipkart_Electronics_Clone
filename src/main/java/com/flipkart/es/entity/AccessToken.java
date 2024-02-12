@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 @Entity
 @Getter
 @Setter
@@ -21,15 +20,15 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AccessToken {
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long tokenId;
-	private String token;
-	private boolean isBlocked;
-	private LocalDateTime expiration;
-	
-	@ManyToOne
-	private User user;
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long accessTokenId;
+    private String accessToken;
+    private boolean accessTokenIsBlocked;
+    private LocalDateTime accessTokenExpirationTime;
+    
+    @ManyToOne
+    private User user;
 
 }

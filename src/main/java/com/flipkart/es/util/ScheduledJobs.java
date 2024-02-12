@@ -1,13 +1,12 @@
 package com.flipkart.es.util;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.flipkart.es.entity.User;
-import com.flipkart.es.repository.AccessTokenRepo;
-import com.flipkart.es.repository.UserRepository;
+import com.flipkart.es.repository.AccessTokenRepository;
+import com.flipkart.es.repository.RefreshTokenRepository;
 
 import lombok.AllArgsConstructor;
 
@@ -15,15 +14,16 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ScheduledJobs {
 
-    private UserRepository userRepository;
-    
-   
+	private AccessTokenRepository accessTokenRepository;
+	private RefreshTokenRepository refreshTokenRepository;
 
-    @SuppressWarnings("null")
-    @Scheduled(cron = "0 0 0 * * MON-SUN")
-    public void deleteNonVerifiedUser() {
-        List<User> listOfNonVerifiedUsers = userRepository.findByIsEmailVerified(false);
-        userRepository.deleteAll(listOfNonVerifiedUsers);
-    }
+	@Scheduled(cron = "0 0 0 * * *")
+	public void deleteExpiredTokens() {
+
+		accessTokenRepository
+				.deleteAll(accessTokenRepository.findByAccessTokenExpirationTimeBefore(LocalDateTime.now()));
+		refreshTokenRepository
+				.deleteAll(refreshTokenRepository.findByRefreshTokenExpirationTimeBefore(LocalDateTime.now()));
+	}
 
 }

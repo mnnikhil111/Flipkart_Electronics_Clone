@@ -13,22 +13,22 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
 @Getter
 @Setter
+@Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class RefreshToken {
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long tokenId;
-	private String token;
-	private boolean isBlocked;
-	private LocalDateTime expiration;
-	
-	@ManyToOne
-	private User user;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long refreshTokenId;
+    private String refreshToken;
+    private boolean refreshTokenIsBlocked;
+    private LocalDateTime refreshTokenExpirationTime;
+    
+    @ManyToOne
+    private User user;
+    
 }

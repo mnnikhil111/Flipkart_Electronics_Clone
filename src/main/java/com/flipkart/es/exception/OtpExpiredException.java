@@ -7,10 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class OTPExpiredException extends RuntimeException{
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private String message;
+    private String message;
 
 }
